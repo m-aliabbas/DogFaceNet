@@ -208,6 +208,7 @@ s = 10
 sr = 20
 n = 5
 print('Ground truth: {:s}'.format(str(issame[s:(n+s)])))
+#Ploting the results
 fig = plt.figure(figsize=(11,2.8*n))
 for i in range(s,s+n):
     # False accepted: columns 1 and 2
