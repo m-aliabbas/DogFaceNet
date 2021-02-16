@@ -26,7 +26,10 @@ from online_training import *
 #----------------------------------------------------------------------------
 # Config.
 
-PATH        = '../../aligned/after_4_bis/' # Path to the directory of the saved dataset
+PATH        = '../../after_4_bis/' # Path to the directory of the saved dataset
+os.mkdir('../output')
+os.mkdir('../output/history/')
+os.mkdir('../output/model/')
 PATH_SAVE   = '../output/history/'                      # Path to the directory where the history will be stored
 PATH_MODEL  = '../output/model/'             # Path to the directory where the model will be stored
 SIZE        = (224,224,3)                               # Size of the input images
