@@ -27,7 +27,7 @@ from online_training import *
 # Config.
 
 PATH        = '../../after_4_bis/' # Path to the directory of the saved dataset
-os.mkdir('../output')
+os.mkdir('../output') #Create a directory with Name 'output' followed by history and model directory inside output.
 os.mkdir('../output/history/')
 os.mkdir('../output/model/')
 PATH_SAVE   = '../output/history/'                      # Path to the directory where the history will be stored
@@ -53,24 +53,24 @@ print('Loading the dataset...')
 filenames = np.empty(0)
 labels = np.empty(0)
 idx = 0
-for root,dirs,files in os.walk(PATH):
+for root,dirs,files in os.walk(PATH): #Iterate through all the directories and Load the images names as well as labels
     if len(files)>1:
         for i in range(len(files)):
             files[i] = root + '/' + files[i]
-        filenames = np.append(filenames,files)
-        labels = np.append(labels,np.ones(len(files))*idx)
+        filenames = np.append(filenames,files) #appending file names
+        labels = np.append(labels,np.ones(len(files))*idx) #appending labels
         idx += 1
-assert len(labels)!=0, '[Error] No data provided.'
+assert len(labels)!=0, '[Error] No data provided.' #if dataset does not exists
 
 print('Done.')
 
-print('Total number of imported pictures: {:d}'.format(len(labels)))
+print('Total number of imported pictures: {:d}'.format(len(labels))) #Total Number of Pictures
 
 nbof_classes = len(np.unique(labels))
 print('Total number of classes: {:d}'.format(nbof_classes))
 
 #----------------------------------------------------------------------------
-# Split the dataset.
+# Split the dataset 10% for Testing other for training.
 
 nbof_test = int(TEST_SPLIT*nbof_classes)
 
@@ -91,34 +91,41 @@ print("Number of testing classes: " + str(nbof_test))
 #----------------------------------------------------------------------------
 # Loss definition.
 
-alpha = 0.3
+alpha = 0.3 #Regularization Parameter of Triplet loss
 def triplet(y_true,y_pred):
+    '''
+    Triplet loss is used for one shot learning. (Few examples of each class used in training.) 
+    A CNN network is used to get embedding vector of images , then Anchor Image is compared with two image samples (Pos and Negative).
+    Distance between Anchor and Pos/Neg is calculated
+    Sum of taken for Anchor_Postive , Achor_Negative and Aplha. 
+    '''
+    a = y_pred[0::3] #Anchor
+    p = y_pred[1::3] #Positive
+    n = y_pred[2::3] #Nagative
     
-    a = y_pred[0::3]
-    p = y_pred[1::3]
-    n = y_pred[2::3]
-    
-    ap = K.sum(K.square(a-p),-1)
-    an = K.sum(K.square(a-n),-1)
-
-    return K.sum(tf.nn.relu(ap - an + alpha))
+    ap = K.sum(K.square(a-p),-1) #Distance between Anchor and Positive
+    an = K.sum(K.square(a-n),-1) #Distance between Anchor and Negative
+  
+    return K.sum(tf.nn.relu(ap - an + alpha)) #Retuurn relu function over tripplet loss
 
 def triplet_acc(y_true,y_pred):
-    a = y_pred[0::3]
-    p = y_pred[1::3]
-    n = y_pred[2::3]
+    #Accuracy Computation for Triplet loss
+    a = y_pred[0::3] #Getting Anchor for comperision
+    p = y_pred[1::3] #Getting Positive
+    n = y_pred[2::3] #Getting Negative
     
-    ap = K.sum(K.square(a-p),-1)
-    an = K.sum(K.square(a-n),-1)
+    ap = K.sum(K.square(a-p),-1) #SUm of Squre between Anchor and Positve
+    an = K.sum(K.square(a-n),-1) #SUm of Squre between Anchor and Negative
     
-    return K.less(ap+alpha,an)
+    return K.less(ap+alpha,an) #Min (Element wise) betweeen AchorPostive and Negative is taken
 
 #----------------------------------------------------------------------------
 # Model definition.
 
 if LOAD_NET:
+    
     print('Loading model from {:s}{:s}.{:d}.h5 ...'.format(PATH_MODEL,NET_NAME,START_EPOCH))
-
+    #Model loading if made
     model = tf.keras.models.load_model(
         '{:s}{:s}.{:d}.h5'.format(PATH_MODEL,NET_NAME,START_EPOCH),
         custom_objects={'triplet':triplet,'triplet_acc':triplet_acc})
@@ -132,17 +139,17 @@ else:
     """
     Model number 12: Paper version: a modified ResNet with Dropout layers and without bottleneck layers
     """
-
+    #Model is defined here
     print('Defining model {:s} ...'.format(NET_NAME))
-
+    #Emdeding Vector Size
     emb_size = 32
-
+    #input layer 
     inputs = Input(shape=SIZE)
-
+    #Convolutional Layers
     x = Conv2D(16, (7, 7), (2, 2), use_bias=False, activation='relu', padding='same')(inputs)
-    x = BatchNormalization()(x)
+    x = BatchNormalization()(x) #Batch Normalization for normalization of different batches
     x = MaxPooling2D((3,3))(x)
-
+    #ResNet style Model Structure
     for layer in [16,32,64,128,512]:
 
         x = Conv2D(layer, (3, 3), strides=(2,2), use_bias=False, activation='relu', padding='same')(x)
@@ -156,9 +163,9 @@ else:
         x = BatchNormalization()(x)
         x = Add()([r,x])
         
-
+    #Global Average Pooling for making it vector like
     x = GlobalAveragePooling2D()(x)
-    x = Flatten()(x)
+    x = Flatten()(x) #Flatten the vectors
     x = Dropout(0.5)(x)
     x = Dense(emb_size, use_bias=False)(x)
     outputs = Lambda(lambda x: tf.nn.l2_normalize(x,axis=-1))(x)
@@ -178,14 +185,14 @@ print(model.summary())
 
 if HIGH_LEVEL:
     """
-    Hard training: high level of implementation
+    Hard training: high level of implementation for fine tuning
     """
 
     histories = []
-    crt_loss = 0.6
-    crt_acc = 0
-    batch_size = 3*10
-    nbof_subclasses = 40
+    crt_loss = 0.6 
+    crt_acc = 0 #intialize accuracy
+    batch_size = 3*10 #30 is size of batch
+    nbof_subclasses = 40 
 
     # Create saving folders
     if not os.path.isdir(PATH_MODEL):
@@ -218,7 +225,7 @@ if HIGH_LEVEL:
             steps_per_epoch=STEPS_PER_EPOCH,
             epochs=1,
             validation_data=image_generator(filenames_test,labels_test,batch_size,use_aug=False),
-            validation_steps=VALIDATION_STEPS)]
+            validation_steps=VALIDATION_STEPS)] #model training and saving record in hisotry
         
         crt_loss = histories[-1].history['loss'][0]
         crt_acc = histories[-1].history['triplet_acc'][0]
@@ -248,7 +255,7 @@ else:
 
     max_epoch = NBOF_EPOCHS + START_EPOCH
 
-    max_step = 300
+    max_step = 300 
     max_step_test = 30
     batch_size = 3*10
 
@@ -339,7 +346,7 @@ else:
         val_loss += [mean_loss_test]
         val_acc += [mean_acc_test]
         
-        # Save
+        # Saving the fine tuned model
         model.save('{:s}{:s}.{:d}.h5'.format(PATH_MODEL,NET_NAME,epoch))
         history_ = np.array([loss,val_loss,acc,val_acc])
         np.save('{:s}{:s}.{:d}.npy'.format(PATH_SAVE,NET_NAME,epoch),history_)
