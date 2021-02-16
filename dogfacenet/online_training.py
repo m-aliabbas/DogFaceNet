@@ -20,7 +20,7 @@ import tensorflow as tf
 import os
 import pickle
 import numpy as np
-import skimage as sk
+import skimage.io as sk_io
 import matplotlib.pyplot as plt
 import tensorflow.keras.backend as K
 from offline_training import *
@@ -226,7 +226,7 @@ def load_images(filenames):
     h,w,c = SIZE
     images = np.empty((len(filenames),h,w,c))
     for i,f in enumerate(filenames):
-        images[i] = sk.io.imread(f)/255.0
+        images[i] = sk_io.imread(f)/255.0
     return images
 
 def image_generator(filenames, labels, batch_size=63, use_aug=True, datagen=datagen):
