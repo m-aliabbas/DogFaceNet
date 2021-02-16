@@ -27,7 +27,7 @@ PATH_MODEL  = '../output/model/'      # Path to the directory where the model wi
 SIZE        = (224,224,3)                               # Size of the input images
 TEST_SPLIT  = 0.1                                       # Train/test ratio
 
-NET_NAME    = 'dogfacenet.0.h5'               # Network saved name
+NET_NAME    = 'dogfacenet.0'               # Network saved name
 START_EPOCH = 282                                       # Start the training at a specified epoch
 
 #----------------------------------------------------------------------------
@@ -103,10 +103,10 @@ def triplet_acc(y_true,y_pred):
 #----------------------------------------------------------------------------
 # Model definition.
 
-print('Loading model from {:s}{:s}.{:d}.h5 ...'.format(PATH_MODEL,NET_NAME,START_EPOCH))
+print('Loading model from {:s}{:s}.h5 ...'.format(PATH_MODEL,NET_NAME,START_EPOCH))
 
 model = tf.keras.models.load_model(
-    '{:s}{:s}.{:d}.h5'.format(PATH_MODEL,NET_NAME,START_EPOCH),
+    '{:s}{:s}.h5'.format(PATH_MODEL,NET_NAME,START_EPOCH),
     custom_objects={'triplet':triplet,'triplet_acc':triplet_acc})
 
 print('Done.')
