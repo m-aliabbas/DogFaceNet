@@ -230,7 +230,7 @@ for i in range(s,s+n):
     plt.yticks([])
 
 plt.show()
-
+plt.savefig('results.png')
 threshold = 0.3
 less = np.less(dist, threshold)
 acc = np.logical_not(np.logical_xor(less, issame))
